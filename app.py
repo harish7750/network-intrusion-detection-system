@@ -103,10 +103,10 @@ if uploaded_file is not None:
 # HANDLE OBJECT COLUMNS
 # =========================
 
-for col in data.columns:
+    for col in data.columns:
 
     # Convert IP columns
-    if "ip" in col.lower():
+     if "ip" in col.lower():
 
         data[col] = data[col].astype(str)
 
