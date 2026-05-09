@@ -29,29 +29,29 @@ dataset_type = st.selectbox(
 if dataset_type == "NSL KDD":
 
     model = joblib.load(
-        "model/nsl_model.pkl"
+        "nsl_model.pkl"
     )
 
     scaler = joblib.load(
-        "model/nsl_scaler.pkl"
+        "nsl_scaler.pkl"
     )
 
     feature_names = joblib.load(
-        "model/nsl_features.pkl"
+        "nsl_features.pkl"
     )
 
 else:
 
     model = joblib.load(
-        "model/ton_model.pkl"
+        "ton_model.pkl"
     )
 
     scaler = joblib.load(
-        "model/ton_scaler.pkl"
+        "ton_scaler.pkl"
     )
 
     feature_names = joblib.load(
-        "model/ton_features.pkl"
+        "ton_features.pkl"
     )
 
 # =========================
