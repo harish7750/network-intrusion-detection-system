@@ -41,19 +41,23 @@ dataset_type = st.selectbox(
 )
 
 # =========================
-# LOAD MODELS
+# MODEL PATHS
 # =========================
 
 if dataset_type == "NSL KDD":
 
     model_path = "nsl_model.pkl"
+
     scaler_path = "nsl_scaler.pkl"
+
     features_path = "nsl_features.pkl"
 
 else:
 
     model_path = "ton_model.pkl"
+
     scaler_path = "ton_scaler.pkl"
+
     features_path = "ton_features.pkl"
 
 # =========================
@@ -62,42 +66,75 @@ else:
 
 if not os.path.exists(model_path):
 
-    st.error("Model file missing")
+    st.error(
+        f"Missing model file: {model_path}"
+    )
+
     st.stop()
 
 if not os.path.exists(scaler_path):
 
-    st.error("Scaler file missing")
+    st.error(
+        f"Missing scaler file: {scaler_path}"
+    )
+
     st.stop()
 
 if not os.path.exists(features_path):
 
-    st.error("Feature file missing")
+    st.error(
+        f"Missing feature file: {features_path}"
+    )
+
     st.stop()
 
 # =========================
-# LOAD FILES
+# LOAD MODELS
 # =========================
 
-model = joblib.load(model_path)
+model = joblib.load(
+    model_path
+)
 
-scaler = joblib.load(scaler_path)
+scaler = joblib.load(
+    scaler_path
+)
 
-feature_names = joblib.load(features_path)
+feature_names = joblib.load(
+    features_path
+)
 
 # =========================
 # SIDEBAR
 # =========================
 
-st.sidebar.header("System Information")
+st.sidebar.header(
+    "System Information"
+)
 
-st.sidebar.write("Algorithms Used")
+st.sidebar.write(
+    "Algorithms Used"
+)
 
-st.sidebar.write("• Random Forest")
-st.sidebar.write("• Decision Tree")
-st.sidebar.write("• KNN")
-st.sidebar.write("• SVM")
-st.sidebar.write("• XGBoost")
+st.sidebar.write(
+    "• Random Forest"
+)
+
+st.sidebar.write(
+    "• Decision Tree"
+)
+
+st.sidebar.write(
+    "• KNN"
+)
+
+st.sidebar.write(
+    "• SVM"
+)
+
+st.sidebar.write(
+    "• XGBoost"
+)
 
 st.sidebar.success(
     "System Status: ACTIVE"
@@ -178,27 +215,46 @@ if uploaded_file is not None:
 
         for col in data.columns:
 
-            # Convert IP columns
-            if "ip" in col.lower():
+            # Convert column to string
+            data[col] = data[col].astype(str)
 
-                data[col] = data[col].astype(str)
+            # Remove accidental header rows
+            data = data[
+                data[col] != col
+            ]
+
+            # Handle IP columns
+            if "ip" in col.lower():
 
                 data[col] = data[col].apply(
 
                     lambda x: sum(
+
                         [
                             int(i)
+
                             for i in x.split(".")
+
+                            if i.isdigit()
                         ]
+
                     ) if "." in x else 0
                 )
 
-            # Encode other object columns
-            elif data[col].dtype == "object":
+            # Handle other object columns
+            else:
 
                 data[col] = pd.factorize(
                     data[col]
                 )[0]
+
+            # Convert to numeric
+            data[col] = pd.to_numeric(
+
+                data[col],
+
+                errors="coerce"
+            )
 
         # =========================
         # HANDLE NULL VALUES
@@ -247,6 +303,7 @@ if uploaded_file is not None:
             )
 
             result_data["Prediction"] = (
+
                 label_encoder.inverse_transform(
                     predictions
                 )
@@ -275,25 +332,27 @@ if uploaded_file is not None:
         if dataset_type == "NSL KDD":
 
             attack_count = (
+
                 result_data["Prediction"]
                 != "Normal"
+
             ).sum()
 
             normal_count = (
+
                 result_data["Prediction"]
                 == "Normal"
+
             ).sum()
 
         else:
 
             attack_count = (
-                result_data["Prediction"]
-                == 1
+                predictions == 1
             ).sum()
 
             normal_count = (
-                result_data["Prediction"]
-                == 0
+                predictions == 0
             ).sum()
 
         total_records = len(
@@ -301,7 +360,9 @@ if uploaded_file is not None:
         )
 
         attack_percentage = (
+
             attack_count / total_records
+
         ) * 100
 
         # =========================
@@ -335,7 +396,7 @@ if uploaded_file is not None:
         )
 
         # =========================
-        # ALERT
+        # ALERT SYSTEM
         # =========================
 
         st.subheader(
@@ -383,7 +444,7 @@ if uploaded_file is not None:
         st.pyplot(fig1)
 
         # =========================
-        # BAR GRAPH
+        # BAR CHART
         # =========================
 
         st.subheader(
