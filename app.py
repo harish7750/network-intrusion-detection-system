@@ -299,7 +299,7 @@ if uploaded_file is not None:
         if dataset_type == "NSL KDD":
 
             label_encoder = joblib.load(
-                "model/nsl_label_encoder.pkl"
+                "nsl_label_encoder.pkl"
             )
 
             result_data["Prediction"] = (
