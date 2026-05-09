@@ -99,13 +99,30 @@ if uploaded_file is not None:
                 )
 
         # Encode object columns
-        for col in data.columns:
+        # =========================
+# HANDLE OBJECT COLUMNS
+# =========================
 
-            if data[col].dtype == "object":
+for col in data.columns:
 
-                data[col] = pd.factorize(
-                    data[col]
-                )[0]
+    # Convert IP columns
+    if "ip" in col.lower():
+
+        data[col] = data[col].astype(str)
+
+        data[col] = data[col].apply(
+
+            lambda x: sum(
+                [int(i) for i in x.split(".")]
+            ) if "." in x else 0
+        )
+
+    # Encode categorical columns
+    elif data[col].dtype == "object":
+
+        data[col] = pd.factorize(
+            data[col]
+        )[0]
 
         # Match features
         data = data.reindex(
