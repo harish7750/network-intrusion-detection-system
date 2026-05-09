@@ -46,15 +46,15 @@ dataset_type = st.selectbox(
 
 if dataset_type == "NSL KDD":
 
-    model_path = "model/nsl_model.pkl"
-    scaler_path = "model/nsl_scaler.pkl"
-    features_path = "model/nsl_features.pkl"
+    model_path = "nsl_model.pkl"
+    scaler_path = "nsl_scaler.pkl"
+    features_path = "nsl_features.pkl"
 
 else:
 
-    model_path = "model/ton_model.pkl"
-    scaler_path = "model/ton_scaler.pkl"
-    features_path = "model/ton_features.pkl"
+    model_path = "ton_model.pkl"
+    scaler_path = "ton_scaler.pkl"
+    features_path = "ton_features.pkl"
 
 # =========================
 # CHECK FILES
