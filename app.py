@@ -5,6 +5,20 @@ import joblib
 import matplotlib.pyplot as plt
 import os
 
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score
+)
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+
+from xgboost import XGBClassifier
+
 # =========================
 # PAGE CONFIG
 # =========================
@@ -89,10 +103,10 @@ if not os.path.exists(features_path):
     st.stop()
 
 # =========================
-# LOAD MODELS
+# LOAD SAVED MODEL
 # =========================
 
-model = joblib.load(
+saved_model = joblib.load(
     model_path
 )
 
@@ -113,7 +127,7 @@ st.sidebar.header(
 )
 
 st.sidebar.write(
-    "Algorithms Used"
+    "Algorithms Included"
 )
 
 st.sidebar.write(
@@ -175,7 +189,8 @@ if uploaded_file is not None:
                 names=columns
             )
 
-            # Remove label columns
+            actual_labels = data["label"]
+
             data.drop(
                 ["label", "difficulty"],
                 axis=1,
@@ -188,8 +203,9 @@ if uploaded_file is not None:
                 uploaded_file
             )
 
-            # Remove label column if exists
             if "label" in data.columns:
+
+                actual_labels = data["label"]
 
                 data.drop(
                     "label",
@@ -197,8 +213,12 @@ if uploaded_file is not None:
                     inplace=True
                 )
 
+            else:
+
+                actual_labels = None
+
         # =========================
-        # DISPLAY DATA
+        # DISPLAY DATASET
         # =========================
 
         st.subheader(
@@ -215,15 +235,13 @@ if uploaded_file is not None:
 
         for col in data.columns:
 
-            # Convert column to string
             data[col] = data[col].astype(str)
 
-            # Remove accidental header rows
             data = data[
                 data[col] != col
             ]
 
-            # Handle IP columns
+            # IP columns
             if "ip" in col.lower():
 
                 data[col] = data[col].apply(
@@ -241,14 +259,12 @@ if uploaded_file is not None:
                     ) if "." in x else 0
                 )
 
-            # Handle other object columns
             else:
 
                 data[col] = pd.factorize(
                     data[col]
                 )[0]
 
-            # Convert to numeric
             data[col] = pd.to_numeric(
 
                 data[col],
@@ -283,10 +299,10 @@ if uploaded_file is not None:
         )
 
         # =========================
-        # PREDICT
+        # PREDICTION USING SAVED MODEL
         # =========================
 
-        predictions = model.predict(
+        predictions = saved_model.predict(
             scaled_data
         )
 
@@ -326,7 +342,7 @@ if uploaded_file is not None:
         )
 
         # =========================
-        # ATTACK COUNTS
+        # TRAFFIC ANALYSIS
         # =========================
 
         if dataset_type == "NSL KDD":
@@ -396,7 +412,7 @@ if uploaded_file is not None:
         )
 
         # =========================
-        # ALERT SYSTEM
+        # ALERT
         # =========================
 
         st.subheader(
@@ -518,6 +534,186 @@ if uploaded_file is not None:
         )
 
         st.pyplot(fig3)
+
+        # =========================
+        # ALGORITHM COMPARISON
+        # =========================
+
+        st.subheader(
+            "Algorithm Comparison"
+        )
+
+        if actual_labels is not None:
+
+            # Encode actual labels
+            if dataset_type == "NSL KDD":
+
+                label_encoder = joblib.load(
+                    "nsl_label_encoder.pkl"
+                )
+
+                actual_labels = actual_labels.map({
+
+                    "normal": "Normal",
+
+                    "neptune": "DoS",
+                    "back": "DoS",
+                    "land": "DoS",
+                    "pod": "DoS",
+                    "smurf": "DoS",
+                    "teardrop": "DoS",
+
+                    "ipsweep": "Probe",
+                    "nmap": "Probe",
+                    "portsweep": "Probe",
+                    "satan": "Probe",
+
+                    "ftp_write": "R2L",
+                    "guess_passwd": "R2L",
+                    "imap": "R2L",
+                    "multihop": "R2L",
+                    "phf": "R2L",
+                    "spy": "R2L",
+                    "warezclient": "R2L",
+                    "warezmaster": "R2L",
+
+                    "buffer_overflow": "U2R",
+                    "loadmodule": "U2R",
+                    "perl": "U2R",
+                    "rootkit": "U2R"
+                })
+
+                actual_labels = actual_labels.fillna(
+                    "Normal"
+                )
+
+                y_true = label_encoder.transform(
+                    actual_labels
+                )
+
+            else:
+
+                y_true = pd.factorize(
+                    actual_labels
+                )[0]
+
+            # Algorithms
+            algorithms = {
+
+                "Random Forest":
+                RandomForestClassifier(),
+
+                "Decision Tree":
+                DecisionTreeClassifier(),
+
+                "KNN":
+                KNeighborsClassifier(),
+
+                "SVM":
+                SVC(),
+
+                "XGBoost":
+                XGBClassifier(
+                    eval_metric="logloss"
+                )
+            }
+
+            comparison_results = []
+
+            for name, algo in algorithms.items():
+
+                algo.fit(
+                    scaled_data,
+                    y_true
+                )
+
+                pred = algo.predict(
+                    scaled_data
+                )
+
+                accuracy = accuracy_score(
+                    y_true,
+                    pred
+                )
+
+                precision = precision_score(
+                    y_true,
+                    pred,
+                    average="weighted"
+                )
+
+                recall = recall_score(
+                    y_true,
+                    pred,
+                    average="weighted"
+                )
+
+                f1 = f1_score(
+                    y_true,
+                    pred,
+                    average="weighted"
+                )
+
+                comparison_results.append([
+
+                    name,
+                    accuracy,
+                    precision,
+                    recall,
+                    f1
+                ])
+
+            comparison_df = pd.DataFrame(
+
+                comparison_results,
+
+                columns=[
+                    "Algorithm",
+                    "Accuracy",
+                    "Precision",
+                    "Recall",
+                    "F1 Score"
+                ]
+            )
+
+            st.dataframe(
+                comparison_df
+            )
+
+            # =========================
+            # ACCURACY GRAPH
+            # =========================
+
+            st.subheader(
+                "Accuracy Comparison"
+            )
+
+            fig4, ax4 = plt.subplots()
+
+            ax4.bar(
+
+                comparison_df["Algorithm"],
+
+                comparison_df["Accuracy"]
+            )
+
+            ax4.set_xlabel(
+                "Algorithms"
+            )
+
+            ax4.set_ylabel(
+                "Accuracy"
+            )
+
+            plt.xticks(rotation=20)
+
+            st.pyplot(fig4)
+
+        else:
+
+            st.warning(
+                "No label column found for comparison"
+            )
 
         # =========================
         # DOWNLOAD RESULTS
