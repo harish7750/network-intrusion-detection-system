@@ -4,8 +4,8 @@ import joblib
 import matplotlib.pyplot as plt
 
 # Load model and scaler
-model = joblib.load("model/nids_model.pkl")
-scaler = joblib.load("model/scaler.pkl")
+model = joblib.load("nids_model.pkl")
+scaler = joblib.load("scaler.pkl")
 
 st.set_page_config(
     page_title="Network Intrusion Detection System",
