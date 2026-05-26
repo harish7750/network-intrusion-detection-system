@@ -940,5 +940,5 @@ if uploaded_file is not None:
 st.write("---")
 
 st.write(
-    "Developed using Machine Learning, XGBoost, and Streamlit"
+    "Developed using Machine Learning and Streamlit"
 )
