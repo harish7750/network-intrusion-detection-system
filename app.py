@@ -61,17 +61,13 @@ dataset_type = st.selectbox(
 if dataset_type == "NSL KDD":
 
     model_path = "nsl_model.pkl"
-
     scaler_path = "nsl_scaler.pkl"
-
     features_path = "nsl_features.pkl"
 
 else:
 
     model_path = "ton_model.pkl"
-
     scaler_path = "ton_scaler.pkl"
-
     features_path = "ton_features.pkl"
 
 # =========================
@@ -103,7 +99,7 @@ if not os.path.exists(features_path):
     st.stop()
 
 # =========================
-# LOAD SAVED MODEL
+# LOAD SAVED FILES
 # =========================
 
 saved_model = joblib.load(
@@ -130,32 +126,18 @@ st.sidebar.write(
     "Algorithms Included"
 )
 
-st.sidebar.write(
-    "• Random Forest"
-)
-
-st.sidebar.write(
-    "• Decision Tree"
-)
-
-st.sidebar.write(
-    "• KNN"
-)
-
-st.sidebar.write(
-    "• SVM"
-)
-
-st.sidebar.write(
-    "• XGBoost"
-)
+st.sidebar.write("• Random Forest")
+st.sidebar.write("• Decision Tree")
+st.sidebar.write("• KNN")
+st.sidebar.write("• SVM")
+st.sidebar.write("• XGBoost")
 
 st.sidebar.success(
     "System Status: ACTIVE"
 )
 
 # =========================
-# FILE UPLOAD
+# FILE UPLOADER
 # =========================
 
 uploaded_file = st.file_uploader(
@@ -218,7 +200,7 @@ if uploaded_file is not None:
                 actual_labels = None
 
         # =========================
-        # DISPLAY DATASET
+        # DISPLAY DATA
         # =========================
 
         st.subheader(
@@ -228,6 +210,12 @@ if uploaded_file is not None:
         st.dataframe(
             data.head()
         )
+
+        # =========================
+        # SAVE ORIGINAL DATA
+        # =========================
+
+        original_data = data.copy()
 
         # =========================
         # HANDLE OBJECT COLUMNS
@@ -241,7 +229,8 @@ if uploaded_file is not None:
                 data[col] != col
             ]
 
-            # IP columns
+            # Handle IP columns
+
             if "ip" in col.lower():
 
                 data[col] = data[col].apply(
@@ -299,14 +288,14 @@ if uploaded_file is not None:
         )
 
         # =========================
-        # PREDICTION USING SAVED MODEL
+        # PREDICTION
         # =========================
 
         predictions = saved_model.predict(
             scaled_data
         )
 
-        result_data = data.copy()
+        result_data = original_data.copy()
 
         # =========================
         # DECODE LABELS
@@ -460,7 +449,7 @@ if uploaded_file is not None:
         st.pyplot(fig1)
 
         # =========================
-        # BAR CHART
+        # BAR GRAPH
         # =========================
 
         st.subheader(
@@ -545,49 +534,17 @@ if uploaded_file is not None:
 
         if actual_labels is not None:
 
-            # Encode actual labels
             if dataset_type == "NSL KDD":
 
                 label_encoder = joblib.load(
                     "nsl_label_encoder.pkl"
                 )
 
-                actual_labels = actual_labels.map({
-
-                    "normal": "Normal",
-
-                    "neptune": "DoS",
-                    "back": "DoS",
-                    "land": "DoS",
-                    "pod": "DoS",
-                    "smurf": "DoS",
-                    "teardrop": "DoS",
-
-                    "ipsweep": "Probe",
-                    "nmap": "Probe",
-                    "portsweep": "Probe",
-                    "satan": "Probe",
-
-                    "ftp_write": "R2L",
-                    "guess_passwd": "R2L",
-                    "imap": "R2L",
-                    "multihop": "R2L",
-                    "phf": "R2L",
-                    "spy": "R2L",
-                    "warezclient": "R2L",
-                    "warezmaster": "R2L",
-
-                    "buffer_overflow": "U2R",
-                    "loadmodule": "U2R",
-                    "perl": "U2R",
-                    "rootkit": "U2R"
-                })
-
                 actual_labels = actual_labels.fillna(
-                    "Normal"
+                    "normal"
                 )
 
-                y_true = label_encoder.transform(
+                y_true = label_encoder.fit_transform(
                     actual_labels
                 )
 
@@ -597,7 +554,6 @@ if uploaded_file is not None:
                     actual_labels
                 )[0]
 
-            # Algorithms
             algorithms = {
 
                 "Random Forest":
@@ -716,287 +672,267 @@ if uploaded_file is not None:
             )
 
         # =========================
-        # DOWNLOAD RESULTS
+        # GENERATE REPORT
         # =========================
 
-       # =========================
-# GENERATE REPORT
-# =========================
-
-st.subheader(
-    "Download Security Report"
-)
-
-# Create readable report
-report_lines = []
-
-report_lines.append(
-    "HYBRID NETWORK INTRUSION DETECTION SYSTEM REPORT"
-)
-
-report_lines.append(
-    "=" * 60
-)
-
-report_lines.append("")
-
-report_lines.append(
-    f"Dataset Type : {dataset_type}"
-)
-
-report_lines.append(
-    f"Total Records Analyzed : {total_records}"
-)
-
-report_lines.append(
-    f"Normal Traffic Count : {normal_count}"
-)
-
-report_lines.append(
-    f"Attack Traffic Count : {attack_count}"
-)
-
-report_lines.append(
-    f"Attack Percentage : {attack_percentage:.2f}%"
-)
-
-report_lines.append("")
-
-# =========================
-# ATTACK STATUS
-# =========================
-
-if attack_count > 0:
-
-    report_lines.append(
-        "SECURITY STATUS : INTRUSION DETECTED"
-    )
-
-else:
-
-    report_lines.append(
-        "SECURITY STATUS : NETWORK SAFE"
-    )
-
-report_lines.append("")
-
-report_lines.append(
-    "=" * 60
-)
-
-report_lines.append(
-    "ATTACK ANALYSIS"
-)
-
-report_lines.append(
-    "=" * 60
-)
-
-report_lines.append("")
-
-# =========================
-# ATTACK DETAILS
-# =========================
-
-if dataset_type == "NSL KDD":
-
-    attack_details = result_data[
-        result_data["Prediction"] != "Normal"
-    ]
-
-else:
-
-    attack_details = result_data[
-        result_data["Prediction"] == 1
-    ]
-
-# Show first few attacks
-if len(attack_details) > 0:
-
-    report_lines.append(
-        f"Total Suspicious Records : {len(attack_details)}"
-    )
-
-    report_lines.append("")
-
-    report_lines.append(
-        "Sample Attack Records:"
-    )
-
-    report_lines.append("")
-
-    for i in range(
-        min(5, len(attack_details))
-    ):
-
-        report_lines.append(
-            f"Attack Record {i+1}"
+        st.subheader(
+            "Download Security Report"
         )
 
-        if dataset_type == "NSL KDD":
+        report_lines = []
+
+        report_lines.append(
+            "HYBRID NETWORK INTRUSION DETECTION SYSTEM REPORT"
+        )
+
+        report_lines.append(
+            "=" * 60
+        )
+
+        report_lines.append("")
+
+        report_lines.append(
+            f"Dataset Type : {dataset_type}"
+        )
+
+        report_lines.append(
+            f"Total Records Analyzed : {total_records}"
+        )
+
+        report_lines.append(
+            f"Normal Traffic Count : {normal_count}"
+        )
+
+        report_lines.append(
+            f"Attack Traffic Count : {attack_count}"
+        )
+
+        report_lines.append(
+            f"Attack Percentage : {attack_percentage:.2f}%"
+        )
+
+        report_lines.append("")
+
+        if attack_count > 0:
 
             report_lines.append(
-                f"Attack Type : {attack_details.iloc[i]['Prediction']}"
+                "SECURITY STATUS : INTRUSION DETECTED"
             )
 
         else:
 
             report_lines.append(
-                "Attack Type : Malicious Traffic"
+                "SECURITY STATUS : NETWORK SAFE"
             )
 
-        report_lines.append(
-            "-" * 40
-        )
-
-else:
-
-    report_lines.append(
-        "No suspicious activity detected."
-    )
-
-report_lines.append("")
-
-report_lines.append(
-    "=" * 60
-)
-
-report_lines.append(
-    "ALGORITHM PERFORMANCE"
-)
-
-report_lines.append(
-    "=" * 60
-)
-
-report_lines.append("")
-
-# =========================
-# ADD ALGORITHM COMPARISON
-# =========================
-
-if actual_labels is not None:
-
-    for index, row in comparison_df.iterrows():
+        report_lines.append("")
 
         report_lines.append(
-            f"Algorithm : {row['Algorithm']}"
+            "=" * 60
         )
 
         report_lines.append(
-            f"Accuracy : {row['Accuracy']:.4f}"
+            "ATTACK ANALYSIS"
         )
 
         report_lines.append(
-            f"Precision : {row['Precision']:.4f}"
+            "=" * 60
+        )
+
+        report_lines.append("")
+
+        if dataset_type == "NSL KDD":
+
+            attack_details = result_data[
+                result_data["Prediction"] != "Normal"
+            ]
+
+        else:
+
+            attack_details = result_data[
+                result_data["Prediction"] == 1
+            ]
+
+        if len(attack_details) > 0:
+
+            report_lines.append(
+                f"Total Suspicious Records : {len(attack_details)}"
+            )
+
+            report_lines.append("")
+
+            report_lines.append(
+                "Sample Attack Records:"
+            )
+
+            report_lines.append("")
+
+            for i in range(
+                min(5, len(attack_details))
+            ):
+
+                report_lines.append(
+                    f"Attack Record {i+1}"
+                )
+
+                if dataset_type == "NSL KDD":
+
+                    report_lines.append(
+                        f"Attack Type : {attack_details.iloc[i]['Prediction']}"
+                    )
+
+                else:
+
+                    report_lines.append(
+                        "Attack Type : Malicious Traffic"
+                    )
+
+                report_lines.append(
+                    "-" * 40
+                )
+
+        else:
+
+            report_lines.append(
+                "No suspicious activity detected."
+            )
+
+        report_lines.append("")
+
+        report_lines.append(
+            "=" * 60
         )
 
         report_lines.append(
-            f"Recall : {row['Recall']:.4f}"
+            "ALGORITHM PERFORMANCE"
         )
 
         report_lines.append(
-            f"F1 Score : {row['F1 Score']:.4f}"
+            "=" * 60
+        )
+
+        report_lines.append("")
+
+        if actual_labels is not None:
+
+            for index, row in comparison_df.iterrows():
+
+                report_lines.append(
+                    f"Algorithm : {row['Algorithm']}"
+                )
+
+                report_lines.append(
+                    f"Accuracy : {row['Accuracy']:.4f}"
+                )
+
+                report_lines.append(
+                    f"Precision : {row['Precision']:.4f}"
+                )
+
+                report_lines.append(
+                    f"Recall : {row['Recall']:.4f}"
+                )
+
+                report_lines.append(
+                    f"F1 Score : {row['F1 Score']:.4f}"
+                )
+
+                report_lines.append(
+                    "-" * 40
+                )
+
+        report_lines.append("")
+
+        report_lines.append(
+            "=" * 60
         )
 
         report_lines.append(
-            "-" * 40
+            "RECOMMENDATIONS"
         )
 
-report_lines.append("")
+        report_lines.append(
+            "=" * 60
+        )
 
-report_lines.append(
-    "=" * 60
-)
+        report_lines.append("")
 
-report_lines.append(
-    "RECOMMENDATIONS"
-)
+        if attack_count > 0:
 
-report_lines.append(
-    "=" * 60
-)
+            report_lines.append(
+                "• Investigate suspicious traffic immediately"
+            )
 
-report_lines.append("")
+            report_lines.append(
+                "• Enable firewall protection"
+            )
 
-if attack_count > 0:
+            report_lines.append(
+                "• Monitor abnormal packet activity"
+            )
 
-    report_lines.append(
-        "• Investigate suspicious network traffic immediately"
-    )
+            report_lines.append(
+                "• Update IDS rules regularly"
+            )
 
-    report_lines.append(
-        "• Monitor affected IP addresses"
-    )
+        else:
 
-    report_lines.append(
-        "• Enable firewall protection"
-    )
+            report_lines.append(
+                "• Network traffic appears safe"
+            )
 
-    report_lines.append(
-        "• Update intrusion prevention rules"
-    )
+            report_lines.append(
+                "• Continue regular monitoring"
+            )
 
-    report_lines.append(
-        "• Monitor unusual packet activity"
-    )
+        report_lines.append("")
 
-else:
+        report_lines.append(
+            "=" * 60
+        )
 
-    report_lines.append(
-        "• Network traffic appears safe"
-    )
+        report_lines.append(
+            "Generated By Hybrid Network Intrusion Detection System"
+        )
 
-    report_lines.append(
-        "• Continue regular monitoring"
-    )
+        report_text = "\n".join(
+            report_lines
+        )
 
-    report_lines.append(
-        "• Keep IDS models updated"
-    )
+        # =========================
+        # REPORT PREVIEW
+        # =========================
 
-report_lines.append("")
+        st.text_area(
 
-report_lines.append(
-    "=" * 60
-)
+            "Security Report Preview",
 
-report_lines.append(
-    "Generated By Hybrid Network Intrusion Detection System"
-)
+            report_text,
 
-# Convert report to text
-report_text = "\n".join(
-    report_lines
-)
+            height=400
+        )
 
-# =========================
-# SHOW REPORT PREVIEW
-# =========================
+        # =========================
+        # DOWNLOAD BUTTON
+        # =========================
 
-st.text_area(
+        st.download_button(
 
-    "Security Report Preview",
+            label="Download Security Report",
 
-    report_text,
+            data=report_text,
 
-    height=400
-)
+            file_name="security_report.txt",
 
-# =========================
-# DOWNLOAD BUTTON
-# =========================
+            mime="text/plain"
+        )
 
-st.download_button(
+    except Exception as e:
 
-    label="Download Security Report",
+        st.error(
+            f"Error: {e}"
+        )
 
-    data=report_text,
-
-    file_name="security_report.txt",
-
-    mime="text/plain"
-)
 # =========================
 # FOOTER
 # =========================
