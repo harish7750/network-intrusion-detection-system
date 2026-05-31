@@ -24,7 +24,7 @@ from xgboost import XGBClassifier
 # =========================
 
 st.set_page_config(
-    page_title="Hybrid Network Intrusion Detection System",
+    page_title="Network Intrusion Detection System",
     layout="wide"
 )
 
