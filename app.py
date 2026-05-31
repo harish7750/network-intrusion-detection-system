@@ -33,7 +33,7 @@ st.set_page_config(
 # =========================
 
 st.title(
-    "Hybrid Network Intrusion Detection System"
+    "Network Intrusion Detection System"
 )
 
 st.write(
